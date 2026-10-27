@@ -172,7 +172,7 @@ public final class ReaderApp extends Application {
                 radioMenu("Library Layout", LibraryLayout.values(), library.layoutProperty()),
                 new SeparatorMenuItem(), contents, bigger, smaller, reset, new SeparatorMenuItem(),
                 radioMenu("Theme", ReaderTheme.values(), ctx.theme),
-                radioMenu("Font", ReaderFont.values(), ctx.font));
+                fontMenu());
 
         MenuItem prev = item("Previous Chapter / Page", "Shortcut+Left", () -> onBook(BookView::previousSection));
         MenuItem next = item("Next Chapter / Page", "Shortcut+Right", () -> onBook(BookView::nextSection));
@@ -196,6 +196,23 @@ public final class ReaderApp extends Application {
         MenuBar bar = new MenuBar(file, view, go, tools);
         bar.setUseSystemMenuBar(true); // native menu bar on macOS
         return bar;
+    }
+
+    /** The standard font choices, the chosen installed font, and the font picker. */
+    private Menu fontMenu() {
+        Menu menu = radioMenu("Font", ReaderFont.values(), ctx.font);
+        RadioMenuItem installed = (RadioMenuItem) menu.getItems().get(ReaderFont.INSTALLED.ordinal());
+        Runnable label = () -> {
+            String family = ctx.installedFont.get();
+            boolean chosen = family != null && !family.isBlank();
+            installed.setText(chosen ? "Installed: " + family : "Installed font (none chosen)");
+            installed.setDisable(!chosen);
+        };
+        ctx.installedFont.addListener((o, a, v) -> label.run());
+        label.run();
+        menu.getItems().addAll(new SeparatorMenuItem(),
+                item("Choose Font…", "Shortcut+Shift+F", () -> FontDialog.show(ctx)));
+        return menu;
     }
 
     private void onBook(Consumer<BookView> action) {

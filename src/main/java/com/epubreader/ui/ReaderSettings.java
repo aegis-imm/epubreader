@@ -173,6 +173,15 @@ final class ReaderSettings {
         put("font", font.name());
     }
 
+    /** Family name of the installed font used when {@link #font()} is {@link ReaderFont#INSTALLED}. */
+    String installedFont() {
+        return get("font.installed", "");
+    }
+
+    void setInstalledFont(String family) {
+        put("font.installed", family);
+    }
+
     boolean tocVisible() {
         return Boolean.parseBoolean(get("tocVisible", "true"));
     }

@@ -17,6 +17,7 @@ import javafx.scene.control.TreeView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
@@ -86,13 +87,18 @@ final class EpubView implements BookView {
         next.setOnAction(e -> nextSection());
         Label size = new Label();
         size.textProperty().bind(ctx.fontPercent.asString("%d%%"));
-        root.setTop(ViewChrome.toolBar(onLibrary, ctx, prev, next, ViewChrome.zoomControls(this, size),
-                ViewChrome.themeChoice(ctx)));
+        Button fontButton = new Button("Font…");
+        fontButton.setTooltip(new javafx.scene.control.Tooltip("Choose the reading font"));
+        fontButton.setOnAction(e -> FontDialog.show(ctx));
+        HBox textControls = new HBox(8, ViewChrome.zoomControls(this, size), fontButton);
+        textControls.setAlignment(javafx.geometry.Pos.CENTER);
+        root.setTop(ViewChrome.toolBar(onLibrary, ctx, prev, next, textControls, ViewChrome.themeChoice(ctx)));
         root.setCenter(split);
         root.setBottom(status);
 
         ctx.theme.addListener(appearance);
         ctx.font.addListener(appearance);
+        ctx.installedFont.addListener(appearance);
         ctx.fontPercent.addListener(appearance);
         applyAppearance();
 
@@ -158,6 +164,7 @@ final class EpubView implements BookView {
         unbindToc.run();
         ctx.theme.removeListener(appearance);
         ctx.font.removeListener(appearance);
+        ctx.installedFont.removeListener(appearance);
         ctx.fontPercent.removeListener(appearance);
         ctx.popup.hide();
         engine.load("about:blank");
@@ -170,12 +177,12 @@ final class EpubView implements BookView {
         ReaderTheme t = ctx.theme.get();
         webView.setFontScale(ctx.fontPercent.get() / 100.0);
         webView.setPageFill(Color.web(t.background));
-        String css = Base64.getEncoder().encodeToString(bookCss(t, ctx.font.get()).getBytes(StandardCharsets.UTF_8));
+        String css = Base64.getEncoder().encodeToString(bookCss(t, ctx.fontCss()).getBytes(StandardCharsets.UTF_8));
         engine.setUserStyleSheetLocation("data:text/css;charset=utf-8;base64," + css);
     }
 
     /** User stylesheet laid over every chapter; user {@code !important} rules beat the book's own. */
-    private static String bookCss(ReaderTheme t, ReaderFont f) {
+    private static String bookCss(ReaderTheme t, String fontFamily) {
         StringBuilder css = new StringBuilder();
         css.append("html, body { background-color: %s !important; }\n".formatted(t.background));
         css.append("""
@@ -196,8 +203,10 @@ final class EpubView implements BookView {
             css.append("body * { color: inherit !important; background-color: transparent !important; }\n");
         }
         css.append("body a, body a:visited { color: %s !important; }\n".formatted(t.link));
-        if (f.cssFamily != null) {
-            css.append("body, body * { font-family: %s !important; }\n".formatted(f.cssFamily));
+        if (fontFamily != null) {
+            // Keep code samples in the book's monospace font.
+            css.append(("body, body *:not(pre):not(code):not(kbd):not(samp):not(tt):not(pre *):not(code *)"
+                    + " { font-family: %s !important; }\n").formatted(fontFamily));
         }
         return css.toString();
     }

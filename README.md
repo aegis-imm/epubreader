@@ -18,8 +18,10 @@ A desktop reader for EPUB and PDF books on Windows and macOS, built with **Java 
 
 **Reading**
 - EPUB 2 and EPUB 3 books with a table of contents. PDFs show their bookmarks in the same sidebar.
-- Light, sepia and dark themes; publisher, serif or sans-serif fonts; text size 60–250% (EPUB) or zoom
-  25–400% (PDF).
+- Light, sepia and dark themes; text size 60–250% (EPUB) or zoom 25–400% (PDF).
+- Reading font for EPUBs: the publisher's, serif, sans-serif, or any font installed on your computer
+  (**Font…** in the toolbar, or **View → Font → Choose Font…**). The preview includes Thai, and code
+  samples keep their monospace font.
 - Remembers where you stopped in every book.
 
 **Dictionary popup**
