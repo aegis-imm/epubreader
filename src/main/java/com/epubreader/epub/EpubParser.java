@@ -44,7 +44,7 @@ public final class EpubParser {
             extract(epubFile, root);
             return parse(epubFile, root);
         } catch (IOException | RuntimeException e) {
-            new EpubBook(epubFile, root, "", "", List.of(), List.of()).close();
+            new EpubBook(epubFile, root, "", "", List.of(), List.of(), Map.of()).close();
             throw e;
         }
     }
@@ -99,11 +99,16 @@ public final class EpubParser {
         }
 
         List<Path> spine = new ArrayList<>();
+        Map<Path, Path> htmlCopies = new HashMap<>();
         Element spineEl = first(descendants(opf, "spine"));
         for (Element ref : descendants(opf, "itemref")) {
             ManifestItem item = manifest.get(ref.getAttribute("idref"));
             if (item != null && Files.isRegularFile(item.path())) {
-                spine.add(item.path());
+                Path rendered = XhtmlRepair.prepare(item.path());
+                if (!rendered.equals(item.path())) {
+                    htmlCopies.put(item.path(), rendered);
+                }
+                spine.add(rendered);
             }
         }
         if (spine.isEmpty()) {
@@ -121,7 +126,8 @@ public final class EpubParser {
         if (toc.isEmpty()) {
             toc = fallbackToc(spine);
         }
-        return new EpubBook(epubFile, root, title, String.join(", ", creators), List.copyOf(spine), toc);
+        return new EpubBook(epubFile, root, title, String.join(", ", creators), List.copyOf(spine), toc,
+                Map.copyOf(htmlCopies));
     }
 
     private static Path findOpf(Path root) throws IOException {
@@ -277,19 +283,12 @@ public final class EpubParser {
 
     static Document parseXml(byte[] bytes, String name) throws IOException {
         try {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            factory.setNamespaceAware(true);
-            factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-            factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
-            factory.setExpandEntityReferences(false);
-            DocumentBuilder builder = factory.newDocumentBuilder();
-            builder.setEntityResolver((publicId, systemId) -> new InputSource(new StringReader("")));
-            builder.setErrorHandler(new org.xml.sax.helpers.DefaultHandler());
+            DocumentBuilder builder = newBuilder();
             try {
                 return builder.parse(new ByteArrayInputStream(bytes));
             } catch (org.xml.sax.SAXException e) {
-                // XHTML often uses named entities that only exist in the (unloaded) DTD.
-                String xml = replaceHtmlEntities(new String(bytes, StandardCharsets.UTF_8));
+                // Real books often use HTML entities or undeclared prefixes; repair and retry.
+                String xml = XhtmlRepair.repair(XhtmlRepair.decode(bytes));
                 return builder.parse(new InputSource(new StringReader(xml)));
             }
         } catch (IOException e) {
@@ -299,10 +298,17 @@ public final class EpubParser {
         }
     }
 
-    private static String replaceHtmlEntities(String xml) {
-        return xml.replace("&nbsp;", "&#160;").replace("&mdash;", "&#8212;").replace("&ndash;", "&#8211;")
-                .replace("&hellip;", "&#8230;").replace("&rsquo;", "&#8217;").replace("&lsquo;", "&#8216;")
-                .replace("&rdquo;", "&#8221;").replace("&ldquo;", "&#8220;").replace("&copy;", "&#169;");
+    /** A namespace-aware parser that never fetches external DTDs and doesn't print errors. */
+    static DocumentBuilder newBuilder() throws javax.xml.parsers.ParserConfigurationException {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true);
+        factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+        factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+        factory.setExpandEntityReferences(false);
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        builder.setEntityResolver((publicId, systemId) -> new InputSource(new StringReader("")));
+        builder.setErrorHandler(new org.xml.sax.helpers.DefaultHandler());
+        return builder;
     }
 
     static List<Element> descendants(Document doc, String localName) {

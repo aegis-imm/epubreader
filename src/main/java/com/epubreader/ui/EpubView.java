@@ -224,7 +224,7 @@ final class EpubView implements BookView {
     private void navigateTo(URI target) {
         if (!closed && target != null) {
             pendingFraction = -1; // let the #fragment decide where to scroll
-            engine.load(target.toString());
+            engine.load(book.renderTarget(target).toString());
         }
     }
 
@@ -236,6 +236,12 @@ final class EpubView implements BookView {
         try {
             uri = new URI(location);
         } catch (URISyntaxException e) {
+            return;
+        }
+        URI rendered = book.renderTarget(uri);
+        if (rendered != uri) {
+            // A link inside the book named a chapter that is shown from its HTML copy.
+            Platform.runLater(() -> engine.load(rendered.toString()));
             return;
         }
         int index = book.spineIndexOf(uri);
