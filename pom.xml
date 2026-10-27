@@ -66,7 +66,7 @@
                 </configuration>
             </plugin>
             <!-- For jpackage: JavaFX goes on the module path (target/javafx), everything else on the
-                 class path (target/app). See package-windows.ps1 and package-mac.sh. -->
+                 class path (target/app). See package-windows.cmd and package-mac.sh. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>

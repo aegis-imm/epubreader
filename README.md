@@ -80,10 +80,10 @@ JavaFX includes native code, so build each platform's app on that platform.
 **Windows** creates the folder `target\dist\EPUB Reader\EPUB Reader.exe`:
 
 ```powershell
-.\package-windows.ps1
+.\package-windows.cmd
 ```
 
-Add `-Installer` to build an `.msi` instead. It adds Start-menu and desktop shortcuts and lets you open
+Close the app before rebuilding. Run `.\package-windows.cmd installer` to build an `.msi` instead. It adds Start-menu and desktop shortcuts and lets you open
 `.epub` and `.pdf` files with the app. This needs the [WiX Toolset](https://wixtoolset.org/) installed.
 
 **macOS** creates `target/dist/EPUB Reader-1.0.0.dmg`:
