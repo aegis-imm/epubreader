@@ -22,6 +22,7 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.RadioMenuItem;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
@@ -101,6 +102,12 @@ public final class ReaderApp extends Application {
         library.setLibrary(new Library(libraryDir));
 
         stage.setTitle(APP_TITLE);
+        for (int size : new int[]{16, 24, 32, 48, 64, 128, 256}) {
+            var icon = ReaderApp.class.getResource("/icons/app-" + size + ".png");
+            if (icon != null) {
+                stage.getIcons().add(new Image(icon.toExternalForm()));
+            }
+        }
         stage.setScene(scene);
         stage.setMinWidth(560);
         stage.setMinHeight(400);

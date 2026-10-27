@@ -83,8 +83,12 @@ JavaFX includes native code, so build each platform's app on that platform.
 .\package-windows.cmd
 ```
 
-Close the app before rebuilding. Run `.\package-windows.cmd installer` to build an `.msi` instead. It adds Start-menu and desktop shortcuts and lets you open
-`.epub` and `.pdf` files with the app. This needs the [WiX Toolset](https://wixtoolset.org/) installed.
+Close the app before rebuilding. Run `.\package-windows.cmd installer` to build an `.msi` instead
+(`target\dist\EPUB Reader-1.0.0.msi`). That needs the [WiX Toolset](https://wixtoolset.org/) v4 or
+later. The script finds `wix.exe` on PATH, in the folder named by `WIX_DIR`, or in a WiX SDK NuGet package
+extracted to `<drive>:\wix-<version>` on the project's drive. It installs the WiX extensions jpackage
+needs. WiX 7 also requires you to accept its licence once with `wix.exe eula accept wix7`.
+The installer adds Start-menu and desktop shortcuts and lets you open `.epub` and `.pdf` files with the app.
 
 **macOS** creates `target/dist/EPUB Reader-1.0.0.dmg`:
 

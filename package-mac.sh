@@ -9,6 +9,7 @@ cd "$(dirname "$0")"
 
 jpackage --type dmg --name "EPUB Reader" --app-version 1.0.0 --vendor "EPUB Reader" \
     --mac-package-identifier com.epubreader \
+    --icon packaging/app.icns \
     --dest target/dist \
     --input target/app --main-jar epub-reader-1.0.0.jar --main-class com.epubreader.ui.ReaderApp \
     --module-path target/javafx \
